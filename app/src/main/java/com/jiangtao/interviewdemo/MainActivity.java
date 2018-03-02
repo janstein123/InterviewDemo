@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         mIconImage = findViewById(R.id.icon);
 
         mUrlEdit.setText("https://tieba.baidu.com");
+        mUrlEdit.setSelection(mUrlEdit.getText().length());
     }
 
 
@@ -155,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
+                InputStream is = null;
                 try {
                     URL url = new URL(iconUrl);
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -162,8 +164,9 @@ public class MainActivity extends AppCompatActivity {
                     connection.setRequestMethod("GET");
                     connection.setConnectTimeout(30000);
                     connection.setReadTimeout(30000);
+
                     if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                        InputStream is = connection.getInputStream();
+                        is = connection.getInputStream();
                         Log.d(TAG, "start 2");
                         Bitmap bmp = BitmapFactory.decodeStream(is);
                         if (bmp != null) {
@@ -172,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             mHandler.sendEmptyMessage(MSG_ICON_DOWNLOAD_FAILED);
                         }
-                        is.close();
+
                         Log.d(TAG, "end");
                     } else {
                         mHandler.sendEmptyMessage(MSG_ICON_DOWNLOAD_FAILED);
@@ -181,10 +184,17 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                     mHandler.sendEmptyMessage(MSG_ICON_DOWNLOAD_FAILED);
                 } finally {
-
+                    try {
+                        if (is != null) {
+                            is.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
         t.start();
     }
+
 }
